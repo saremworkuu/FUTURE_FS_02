@@ -17,8 +17,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onAuthenticated }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
 
-    if (normalizedEmail === DEMO_EMAIL.toLowerCase() && password === DEMO_PASSWORD) {
+    if (normalizedEmail === DEMO_EMAIL.toLowerCase() && normalizedPassword === DEMO_PASSWORD) {
       setError(null);
       onAuthenticated();
     } else {
