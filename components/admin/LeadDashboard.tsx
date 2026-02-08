@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Trash2 } from 'lucide-react';
 
 export type LeadStatus = 'New' | 'Contacted' | 'Converted';
 
@@ -13,6 +14,8 @@ export interface Lead {
   createdAt: string;
   updatedAt: string;
 }
+
+const STORAGE_KEY = 'yegna-leads';
 
 const mockLeads: Lead[] = [
   {
@@ -42,12 +45,35 @@ const mockLeads: Lead[] = [
 const statuses: LeadStatus[] = ['New', 'Contacted', 'Converted'];
 
 const LeadDashboard: React.FC = () => {
-  const [leads, setLeads] = useState<Lead[]>(mockLeads);
+  const [leads, setLeads] = useState<Lead[]>(() => {
+    if (typeof window === 'undefined') return mockLeads;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Lead[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {
+      // fall back to mock data on parse errors
+    }
+    return mockLeads;
+  });
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(mockLeads[0]?._id ?? null);
   const [newNote, setNewNote] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | LeadStatus>('All');
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
+    } catch {
+      // ignore storage errors
+    }
+  }, [leads]);
 
   const selectedLead = leads.find((lead) => lead._id === selectedLeadId) ?? leads[0] ?? null;
 
@@ -242,12 +268,24 @@ const LeadDashboard: React.FC = () => {
                     <h3 className="text-lg font-semibold text-slate-50">{selectedLead.name}</h3>
                     <p className="text-xs text-slate-400 mt-1">{selectedLead.email}</p>
                   </div>
-                  <button
-                    onClick={() => setIsDetailOpen(false)}
-                    className="text-slate-500 hover:text-slate-200 text-sm"
-                  >
-                    ✕
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setLeads((prev) => prev.filter((lead) => lead._id !== selectedLead._id));
+                        setIsDetailOpen(false);
+                      }}
+                      className="p-2 rounded-full text-slate-400 hover:text-red-400 hover:bg-slate-800/70"
+                      aria-label="Delete lead"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setIsDetailOpen(false)}
+                      className="text-slate-500 hover:text-slate-200 text-sm"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-3">

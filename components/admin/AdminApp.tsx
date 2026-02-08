@@ -1,44 +1,13 @@
-import React, { useMemo, useState } from 'react';
-import LeadDashboard, { Lead } from './LeadDashboard';
+import React, { useState } from 'react';
+import LeadDashboard from './LeadDashboard';
 import AnalyticsView from './AnalyticsView';
 
-const AdminApp: React.FC = () => {
+interface AdminAppProps {
+  onLogout?: () => void;
+}
+
+const AdminApp: React.FC<AdminAppProps> = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState<'leads' | 'analytics'>('leads');
-
-  // Simple demo totals using the same mock data shape as LeadDashboard
-  const demoTotals = useMemo(() => {
-    const mock: Lead[] = [
-      {
-        _id: '1',
-        name: 'Sara Bekele',
-        email: 'sara@example.com',
-        status: 'New',
-        notes: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        phone: '+251900000001',
-        source: 'Website',
-      },
-      {
-        _id: '2',
-        name: 'Daniel K',
-        email: 'daniel@example.com',
-        status: 'Contacted',
-        notes: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        phone: '+251900000002',
-        source: 'Instagram',
-      },
-    ];
-
-    const totalLeads = mock.length;
-    const newCount = mock.filter((l) => l.status === 'New').length;
-    const contactedCount = mock.filter((l) => l.status === 'Contacted').length;
-    const convertedCount = mock.filter((l) => l.status === 'Converted').length;
-
-    return { totalLeads, newCount, contactedCount, convertedCount };
-  }, []);
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-50 flex">
@@ -52,9 +21,20 @@ const AdminApp: React.FC = () => {
             </button>
           </nav>
         </div>
-        <div className="mt-8 text-[11px] text-slate-500">
-          <p className="uppercase tracking-[0.18em] mb-1">Account</p>
-          <p className="text-slate-400">Signed in as admin</p>
+        <div className="mt-8 text-[11px] text-slate-500 space-y-2">
+          <div>
+            <p className="uppercase tracking-[0.18em] mb-1">Account</p>
+            <p className="text-slate-400">Signed in as admin</p>
+          </div>
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="mt-1 inline-flex items-center justify-center rounded-full border border-slate-700 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300 hover:bg-slate-800 hover:text-slate-50"
+            >
+              Logout
+            </button>
+          )}
         </div>
       </aside>
 
@@ -104,16 +84,7 @@ const AdminApp: React.FC = () => {
             </div>
           </header>
 
-          {activeTab === 'leads' ? (
-            <LeadDashboard />
-          ) : (
-            <AnalyticsView
-              totalLeads={demoTotals.totalLeads}
-              newCount={demoTotals.newCount}
-              contactedCount={demoTotals.contactedCount}
-              convertedCount={demoTotals.convertedCount}
-            />
-          )}
+          {activeTab === 'leads' ? <LeadDashboard /> : <AnalyticsView />}
         </div>
       </main>
     </div>

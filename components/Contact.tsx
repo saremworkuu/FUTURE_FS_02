@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Instagram } from 'lucide-react';
 
 interface ContactProps {
@@ -7,6 +7,55 @@ interface ContactProps {
 }
 
 const Contact: React.FC<ContactProps> = ({ isLightMode }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedMessage = message.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedMessage) {
+      setStatus('error');
+      return;
+    }
+
+    const newLead = {
+      _id: Date.now().toString(),
+      name: trimmedName,
+      email: trimmedEmail,
+      phone: undefined,
+      source: 'Website',
+      status: 'New',
+      notes: [trimmedMessage],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      const STORAGE_KEY = 'yegna-leads';
+      const existingRaw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+      const existing = existingRaw ? JSON.parse(existingRaw) : [];
+      const updated = Array.isArray(existing) ? [...existing, newLead] : [newLead];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      }
+      setStatus('success');
+      setName('');
+      setEmail('');
+      setMessage('');
+      // Hide success message after ~8 seconds
+      setTimeout(() => {
+        setStatus('idle');
+      }, 8000);
+    } catch {
+      setStatus('error');
+    }
+  };
+
   return (
     <div className="container mx-auto px-6">
       <div
@@ -46,9 +95,9 @@ const Contact: React.FC<ContactProps> = ({ isLightMode }) => {
                     Address
                   </h4>
                   <p className={isLightMode ? 'text-stone-600' : 'text-stone-400'}>
-                    123 Flower Street — Spring Garden
+                    Addis Ababa, Bole, time Building
                     <br />
-                    São Paulo, SP
+                    1st Floor
                   </p>
                 </div>
               </div>
@@ -70,7 +119,7 @@ const Contact: React.FC<ContactProps> = ({ isLightMode }) => {
                     Phone
                   </h4>
                   <p className={isLightMode ? 'text-stone-600' : 'text-stone-400'}>
-                    +55 (11) 99876-5432
+                    +251 90 546 0089
                   </p>
                 </div>
               </div>
@@ -92,7 +141,7 @@ const Contact: React.FC<ContactProps> = ({ isLightMode }) => {
                     E-mail
                   </h4>
                   <p className={isLightMode ? 'text-stone-600' : 'text-stone-400'}>
-                    hello@jessicapires.com
+                    yegnaቡና@gmail.com
                   </p>
                 </div>
               </div>
@@ -134,13 +183,15 @@ const Contact: React.FC<ContactProps> = ({ isLightMode }) => {
             >
               Send a message
             </h4>
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest text-stone-500 font-bold mb-2">Your Name</label>
                   <input 
                     type="text" 
                     placeholder="Full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     className={`w-full px-6 py-4 rounded-2xl focus:outline-none focus:border-pink-500 transition-colors border ${
                       isLightMode
                         ? 'bg-white border-pink-100 text-stone-900'
@@ -153,6 +204,8 @@ const Contact: React.FC<ContactProps> = ({ isLightMode }) => {
                   <input 
                     type="email" 
                     placeholder="email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className={`w-full px-6 py-4 rounded-2xl focus:outline-none focus:border-pink-500 transition-colors border ${
                       isLightMode
                         ? 'bg-white border-pink-100 text-stone-900'
@@ -166,6 +219,8 @@ const Contact: React.FC<ContactProps> = ({ isLightMode }) => {
                 <textarea 
                   rows={4} 
                   placeholder="How can we help you?"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                   className={`w-full px-6 py-4 rounded-2xl focus:outline-none focus:border-pink-500 transition-colors border ${
                     isLightMode
                       ? 'bg-white border-pink-100 text-stone-900'
@@ -173,9 +228,19 @@ const Contact: React.FC<ContactProps> = ({ isLightMode }) => {
                   }`}
                 ></textarea>
               </div>
-              <button className="w-full py-4 bg-pink-600 text-white rounded-full font-bold uppercase tracking-widest text-xs hover:bg-pink-500 shadow-xl shadow-pink-900/20 transition-all transform hover:-translate-y-1">
+              <button
+                type="submit"
+                className="w-full py-4 bg-pink-600 text-white rounded-full font-bold uppercase tracking-widest text-xs hover:bg-pink-500 shadow-xl shadow-pink-900/20 transition-all transform hover:-translate-y-1"
+              >
                 Send Message
               </button>
+
+              {status === 'success' && (
+                <p className="text-xs text-pink-400 text-center">Thanks! Your message was sent.</p>
+              )}
+              {status === 'error' && (
+                <p className="text-xs text-red-400 text-center">Please fill in all fields and try again.</p>
+              )}
             </form>
           </div>
         </div>
